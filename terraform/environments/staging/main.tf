@@ -57,7 +57,7 @@ resource "aws_secretsmanager_secret_version" "api_keys" {
 }
 
 # =============================================================================
-# DNS & Certificates Module
+# DNS & Certificates Module (koumpa.com)
 # =============================================================================
 module "dns" {
   source = "../../modules/dns"
