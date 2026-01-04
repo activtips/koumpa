@@ -75,7 +75,7 @@ export function PromptInput({
           {/* Label */}
           <div className="flex items-center gap-2 mb-3 text-dark-400">
             <Sparkles className="w-4 h-4 text-primary-400" />
-            <span className="text-sm font-medium">Propulse par Claude AI</span>
+            <span className="text-sm font-medium">Decrivez votre idee</span>
           </div>
 
           {/* Textarea */}
