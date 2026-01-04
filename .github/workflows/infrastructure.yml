@@ -240,7 +240,7 @@ jobs:
           terraform apply -auto-approve
 
   # ===========================================================================
-  # Deploy Production (automatique après merge sur main)
+  # Deploy Production (nécessite approbation manuelle)
   # ===========================================================================
   deploy-prod:
     name: Deploy Production
@@ -250,6 +250,7 @@ jobs:
     environment:
       name: production
       url: https://koumpa.com
+    # L'environnement "production" doit avoir "Required reviewers" configuré dans GitHub
     env:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
