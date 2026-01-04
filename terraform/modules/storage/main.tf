@@ -67,8 +67,8 @@ resource "aws_cloudfront_distribution" "apps" {
   default_root_object = "index.html"
   price_class         = "PriceClass_100" # Use only North America and Europe (cheapest)
 
-  # Custom domain aliases
-  aliases = var.domain_name != "" ? [var.domain_name] : []
+  # Custom domain aliases (supports wildcard like *.koumpa.com)
+  aliases = var.domain_aliases
 
   origin {
     domain_name              = aws_s3_bucket.apps.bucket_regional_domain_name
@@ -138,9 +138,9 @@ resource "aws_cloudfront_distribution" "apps" {
   }
 
   viewer_certificate {
-    cloudfront_default_certificate = var.acm_certificate_arn == "" ? true : false
-    acm_certificate_arn            = var.acm_certificate_arn != "" ? var.acm_certificate_arn : null
-    ssl_support_method             = var.acm_certificate_arn != "" ? "sni-only" : null
+    cloudfront_default_certificate = length(var.domain_aliases) == 0 ? true : false
+    acm_certificate_arn            = length(var.domain_aliases) > 0 ? var.acm_certificate_arn : null
+    ssl_support_method             = length(var.domain_aliases) > 0 ? "sni-only" : null
     minimum_protocol_version       = "TLSv1.2_2021"
   }
 
