@@ -78,6 +78,13 @@ resource "aws_cognito_user_pool_client" "main" {
   name         = "${var.name_prefix}-client"
   user_pool_id = aws_cognito_user_pool.main.id
 
+  # Explicit auth flows for Amplify SDK (SRP, refresh tokens)
+  explicit_auth_flows = [
+    "ALLOW_USER_SRP_AUTH",
+    "ALLOW_REFRESH_TOKEN_AUTH",
+    "ALLOW_USER_PASSWORD_AUTH",
+  ]
+
   # OAuth flows
   allowed_oauth_flows_user_pool_client = true
   allowed_oauth_flows                  = ["code", "implicit"]
