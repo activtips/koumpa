@@ -42,7 +42,6 @@ coverage/
 .aws/
 
 # Dependencies
-package-lock.json
 yarn.lock
 
 # Build outputs
