@@ -1,10 +1,7 @@
-# Backend configuration for Terraform state
-# This should be created manually first or use local backend initially
-
 terraform {
   backend "s3" {
     bucket         = "koumpa-terraform-state"
-    key            = "koumpa/terraform.tfstate"
+    key            = "prod/terraform.tfstate"
     region         = "eu-west-1"
     encrypt        = true
     dynamodb_table = "koumpa-terraform-locks"

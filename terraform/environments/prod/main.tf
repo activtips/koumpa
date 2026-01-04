@@ -15,7 +15,7 @@ provider "aws" {
 locals {
   project_name = "koumpa"
   name_prefix  = "${local.project_name}-${var.environment}"
-  
+
   common_tags = {
     Application = "AI App Builder"
     Repository  = "github.com/activtips/koumpa"
@@ -27,7 +27,7 @@ resource "aws_secretsmanager_secret" "api_keys" {
   name        = "${local.name_prefix}-api-keys"
   description = "API keys for Claude and Stripe"
 
-  recovery_window_in_days = 7
+  recovery_window_in_days = 30
 }
 
 resource "aws_secretsmanager_secret_version" "api_keys" {
@@ -53,7 +53,7 @@ module "auth" {
 
   name_prefix = local.name_prefix
   environment = var.environment
-  
+
   callback_urls = var.cognito_callback_urls
   logout_urls   = var.cognito_logout_urls
 }
@@ -77,7 +77,7 @@ module "api" {
   plans_table_name    = module.database.plans_table_name
   users_table_name    = module.database.users_table_name
   projects_table_name = module.database.projects_table_name
-  
+
   plans_table_arn    = module.database.plans_table_arn
   users_table_arn    = module.database.users_table_arn
   projects_table_arn = module.database.projects_table_arn
