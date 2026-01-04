@@ -18,11 +18,6 @@ output "api_certificate_arn" {
   value       = aws_acm_certificate_validation.api.certificate_arn
 }
 
-output "apps_domain" {
-  description = "Apps domain name"
-  value       = var.apps_domain
-}
-
 output "api_domain" {
   description = "API domain name"
   value       = var.api_domain

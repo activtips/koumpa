@@ -43,9 +43,14 @@ output "apps_bucket_name" {
   value       = module.storage.apps_bucket_name
 }
 
-output "apps_domain" {
-  description = "Apps domain"
-  value       = local.apps_domain
+output "landing_domain" {
+  description = "Landing page domain (staging.koumpa.com)"
+  value       = local.staging_domain
+}
+
+output "wildcard_domain" {
+  description = "Wildcard domain for user apps (*.staging.koumpa.com)"
+  value       = local.wildcard_domain
 }
 
 output "api_domain" {
