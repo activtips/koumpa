@@ -2,6 +2,16 @@
 # DNS Module - Route 53 & ACM Certificates
 # =============================================================================
 
+terraform {
+  required_providers {
+    aws = {
+      source                = "hashicorp/aws"
+      version               = "~> 5.0"
+      configuration_aliases = [aws.us_east_1]
+    }
+  }
+}
+
 # Data source for existing hosted zone
 data "aws_route53_zone" "main" {
   name         = var.domain_name
