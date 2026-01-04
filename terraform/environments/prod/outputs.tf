@@ -8,6 +8,11 @@ output "cloudfront_domain" {
   value       = module.storage.cloudfront_domain_name
 }
 
+output "cloudfront_distribution_id" {
+  description = "CloudFront distribution ID"
+  value       = module.storage.cloudfront_distribution_id
+}
+
 output "cognito_user_pool_id" {
   description = "Cognito User Pool ID"
   value       = module.auth.user_pool_id

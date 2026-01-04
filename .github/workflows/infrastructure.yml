@@ -239,6 +239,29 @@ jobs:
           cd terraform/environments/staging
           terraform apply -auto-approve
 
+      - name: Get Terraform Outputs
+        id: tf-outputs
+        run: |
+          cd terraform/environments/staging
+          echo "bucket_name=$(terraform output -raw apps_bucket_name)" >> $GITHUB_OUTPUT
+          echo "cloudfront_id=$(terraform output -raw cloudfront_distribution_id)" >> $GITHUB_OUTPUT
+
+      - name: Deploy Landing Page to S3
+        run: |
+          aws s3 sync src/landing/ s3://${{ steps.tf-outputs.outputs.bucket_name }}/ \
+            --delete \
+            --cache-control "max-age=31536000" \
+            --exclude "*.html"
+          aws s3 sync src/landing/ s3://${{ steps.tf-outputs.outputs.bucket_name }}/ \
+            --cache-control "max-age=300" \
+            --include "*.html"
+
+      - name: Invalidate CloudFront Cache
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ steps.tf-outputs.outputs.cloudfront_id }} \
+            --paths "/*"
+
   # ===========================================================================
   # Deploy Production (nécessite approbation manuelle)
   # ===========================================================================
@@ -281,3 +304,26 @@ jobs:
         run: |
           cd terraform/environments/prod
           terraform apply -auto-approve
+
+      - name: Get Terraform Outputs
+        id: tf-outputs
+        run: |
+          cd terraform/environments/prod
+          echo "bucket_name=$(terraform output -raw apps_bucket_name)" >> $GITHUB_OUTPUT
+          echo "cloudfront_id=$(terraform output -raw cloudfront_distribution_id)" >> $GITHUB_OUTPUT
+
+      - name: Deploy Landing Page to S3
+        run: |
+          aws s3 sync src/landing/ s3://${{ steps.tf-outputs.outputs.bucket_name }}/ \
+            --delete \
+            --cache-control "max-age=31536000" \
+            --exclude "*.html"
+          aws s3 sync src/landing/ s3://${{ steps.tf-outputs.outputs.bucket_name }}/ \
+            --cache-control "max-age=300" \
+            --include "*.html"
+
+      - name: Invalidate CloudFront Cache
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ steps.tf-outputs.outputs.cloudfront_id }} \
+            --paths "/*"
