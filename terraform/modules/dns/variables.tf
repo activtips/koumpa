@@ -13,11 +13,6 @@ variable "domain_name" {
   type        = string
 }
 
-variable "apps_domain" {
-  description = "Domain for generated apps CloudFront (e.g., apps.koumpa.com or apps.staging.koumpa.com)"
-  type        = string
-}
-
 variable "api_domain" {
   description = "Domain for API Gateway (e.g., api.koumpa.com or api.staging.koumpa.com)"
   type        = string

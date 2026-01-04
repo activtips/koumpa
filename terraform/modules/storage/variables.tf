@@ -8,10 +8,10 @@ variable "environment" {
   type        = string
 }
 
-variable "domain_name" {
-  description = "Custom domain name for CloudFront (e.g., apps.koumpa.com)"
-  type        = string
-  default     = ""
+variable "domain_aliases" {
+  description = "List of custom domain aliases for CloudFront (e.g., [\"*.koumpa.com\", \"koumpa.com\"])"
+  type        = list(string)
+  default     = []
 }
 
 variable "acm_certificate_arn" {

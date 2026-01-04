@@ -30,8 +30,11 @@ locals {
   project_name = "koumpa"
   name_prefix  = "${local.project_name}-${var.environment}"
   domain_name  = var.domain_name
-  apps_domain  = "apps.${var.domain_name}"
-  api_domain   = "api.${var.domain_name}"
+
+  # Production uses koumpa.com as base
+  root_domain     = var.domain_name
+  wildcard_domain = "*.${var.domain_name}"
+  api_domain      = "api.${var.domain_name}"
 
   common_tags = {
     Application = "AI App Builder"
@@ -69,7 +72,6 @@ module "dns" {
   name_prefix = local.name_prefix
   environment = var.environment
   domain_name = local.domain_name
-  apps_domain = local.apps_domain
   api_domain  = local.api_domain
 }
 
@@ -98,7 +100,8 @@ module "storage" {
 
   name_prefix         = local.name_prefix
   environment         = var.environment
-  domain_name         = local.apps_domain
+  # Wildcard for user apps + root domain for landing page
+  domain_aliases      = [local.wildcard_domain, local.root_domain]
   acm_certificate_arn = module.dns.cloudfront_certificate_arn
 }
 
@@ -131,7 +134,7 @@ module "api" {
   user_pool_client_id = module.auth.user_pool_client_id
 
   # CloudFront
-  cloudfront_domain = local.apps_domain
+  cloudfront_domain = local.root_domain
 
   # Custom Domain
   api_domain_name     = local.api_domain
@@ -153,10 +156,23 @@ module "cron" {
 # Route 53 DNS Records
 # =============================================================================
 
-# CloudFront alias record (apps subdomain)
-resource "aws_route53_record" "apps" {
+# CloudFront alias record for landing page (koumpa.com)
+resource "aws_route53_record" "root" {
   zone_id = module.dns.zone_id
-  name    = local.apps_domain
+  name    = local.root_domain
+  type    = "A"
+
+  alias {
+    name                   = module.storage.cloudfront_domain_name
+    zone_id                = module.storage.cloudfront_hosted_zone_id
+    evaluate_target_health = false
+  }
+}
+
+# CloudFront wildcard record for user apps (*.koumpa.com)
+resource "aws_route53_record" "apps_wildcard" {
+  zone_id = module.dns.zone_id
+  name    = local.wildcard_domain
   type    = "A"
 
   alias {

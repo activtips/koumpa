@@ -20,15 +20,22 @@ data "aws_route53_zone" "main" {
 
 # =============================================================================
 # ACM Certificate for CloudFront (must be in us-east-1)
+# Wildcard certificate for user apps + base domain for landing page
 # =============================================================================
 
-# Certificate for CloudFront (apps subdomain)
 resource "aws_acm_certificate" "cloudfront" {
   provider          = aws.us_east_1
-  domain_name       = var.apps_domain
   validation_method = "DNS"
 
-  subject_alternative_names = var.environment == "prod" ? ["*.${var.domain_name}"] : []
+  # Production: *.koumpa.com + koumpa.com
+  # Staging: *.staging.koumpa.com + staging.koumpa.com
+  domain_name = var.environment == "staging" ? "*.staging.${var.domain_name}" : "*.${var.domain_name}"
+
+  subject_alternative_names = var.environment == "staging" ? [
+    "staging.${var.domain_name}"
+  ] : [
+    var.domain_name
+  ]
 
   lifecycle {
     create_before_destroy = true
