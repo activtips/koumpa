@@ -10,6 +10,12 @@ variable "environment" {
   default     = "staging"
 }
 
+variable "domain_name" {
+  description = "Root domain name"
+  type        = string
+  default     = "koumpa.com"
+}
+
 # Secrets (should be passed via TF_VAR_ or .tfvars file, NEVER commit)
 variable "claude_api_key" {
   description = "Anthropic Claude API key"

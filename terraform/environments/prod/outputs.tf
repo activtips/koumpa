@@ -43,6 +43,21 @@ output "apps_bucket_name" {
   value       = module.storage.apps_bucket_name
 }
 
+output "apps_domain" {
+  description = "Apps domain"
+  value       = local.apps_domain
+}
+
+output "api_domain" {
+  description = "API domain"
+  value       = local.api_domain
+}
+
+output "name_servers" {
+  description = "Route 53 name servers (configure in your domain registrar)"
+  value       = module.dns.zone_name_servers
+}
+
 # Instructions for frontend configuration
 output "frontend_env_variables" {
   description = "Environment variables needed for frontend"

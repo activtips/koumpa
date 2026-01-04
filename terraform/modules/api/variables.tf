@@ -77,3 +77,16 @@ variable "cloudfront_domain" {
   description = "CloudFront distribution domain name"
   type        = string
 }
+
+# Custom Domain
+variable "api_domain_name" {
+  description = "Custom domain name for API Gateway (e.g., api.koumpa.com)"
+  type        = string
+  default     = ""
+}
+
+variable "api_certificate_arn" {
+  description = "ACM certificate ARN for API Gateway custom domain"
+  type        = string
+  default     = ""
+}

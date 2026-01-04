@@ -12,9 +12,26 @@ provider "aws" {
   }
 }
 
+# Provider for us-east-1 (required for CloudFront certificates)
+provider "aws" {
+  alias  = "us_east_1"
+  region = "us-east-1"
+
+  default_tags {
+    tags = {
+      Project     = "Koumpa"
+      Environment = var.environment
+      ManagedBy   = "Terraform"
+    }
+  }
+}
+
 locals {
   project_name = "koumpa"
   name_prefix  = "${local.project_name}-${var.environment}"
+  domain_name  = var.domain_name
+  apps_domain  = "apps.staging.${var.domain_name}"
+  api_domain   = "api.staging.${var.domain_name}"
 
   common_tags = {
     Application = "AI App Builder"
@@ -37,6 +54,23 @@ resource "aws_secretsmanager_secret_version" "api_keys" {
     stripe_secret_key      = var.stripe_secret_key
     stripe_webhook_secret  = var.stripe_webhook_secret
   })
+}
+
+# =============================================================================
+# DNS & Certificates Module
+# =============================================================================
+module "dns" {
+  source = "../../modules/dns"
+
+  providers = {
+    aws.us_east_1 = aws.us_east_1
+  }
+
+  name_prefix = local.name_prefix
+  environment = var.environment
+  domain_name = local.domain_name
+  apps_domain = local.apps_domain
+  api_domain  = local.api_domain
 }
 
 # DynamoDB Module
@@ -62,8 +96,10 @@ module "auth" {
 module "storage" {
   source = "../../modules/storage"
 
-  name_prefix = local.name_prefix
-  environment = var.environment
+  name_prefix         = local.name_prefix
+  environment         = var.environment
+  domain_name         = local.apps_domain
+  acm_certificate_arn = module.dns.cloudfront_certificate_arn
 }
 
 # Lambda Functions Module
@@ -90,12 +126,16 @@ module "api" {
   secrets_arn = aws_secretsmanager_secret.api_keys.arn
 
   # Cognito
-  user_pool_id     = module.auth.user_pool_id
-  user_pool_arn    = module.auth.user_pool_arn
+  user_pool_id        = module.auth.user_pool_id
+  user_pool_arn       = module.auth.user_pool_arn
   user_pool_client_id = module.auth.user_pool_client_id
 
   # CloudFront
-  cloudfront_domain = module.storage.cloudfront_domain_name
+  cloudfront_domain = local.apps_domain
+
+  # Custom Domain
+  api_domain_name     = local.api_domain
+  api_certificate_arn = module.dns.api_certificate_arn
 }
 
 # EventBridge Cron Jobs Module
@@ -107,4 +147,34 @@ module "cron" {
 
   daily_bonus_lambda_arn = module.api.daily_bonus_lambda_arn
   users_table_name       = module.database.users_table_name
+}
+
+# =============================================================================
+# Route 53 DNS Records
+# =============================================================================
+
+# CloudFront alias record (apps subdomain)
+resource "aws_route53_record" "apps" {
+  zone_id = module.dns.zone_id
+  name    = local.apps_domain
+  type    = "A"
+
+  alias {
+    name                   = module.storage.cloudfront_domain_name
+    zone_id                = module.storage.cloudfront_hosted_zone_id
+    evaluate_target_health = false
+  }
+}
+
+# API Gateway alias record
+resource "aws_route53_record" "api" {
+  zone_id = module.dns.zone_id
+  name    = local.api_domain
+  type    = "A"
+
+  alias {
+    name                   = module.api.api_domain_name
+    zone_id                = module.api.api_domain_hosted_zone_id
+    evaluate_target_health = false
+  }
 }

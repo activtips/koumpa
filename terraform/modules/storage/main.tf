@@ -67,6 +67,9 @@ resource "aws_cloudfront_distribution" "apps" {
   default_root_object = "index.html"
   price_class         = "PriceClass_100" # Use only North America and Europe (cheapest)
 
+  # Custom domain aliases
+  aliases = var.domain_name != "" ? [var.domain_name] : []
+
   origin {
     domain_name              = aws_s3_bucket.apps.bucket_regional_domain_name
     origin_id                = "S3-${aws_s3_bucket.apps.id}"
@@ -135,7 +138,9 @@ resource "aws_cloudfront_distribution" "apps" {
   }
 
   viewer_certificate {
-    cloudfront_default_certificate = true
+    cloudfront_default_certificate = var.acm_certificate_arn == "" ? true : false
+    acm_certificate_arn            = var.acm_certificate_arn != "" ? var.acm_certificate_arn : null
+    ssl_support_method             = var.acm_certificate_arn != "" ? "sni-only" : null
     minimum_protocol_version       = "TLSv1.2_2021"
   }
 

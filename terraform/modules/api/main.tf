@@ -193,3 +193,31 @@ resource "aws_cloudwatch_log_group" "admin_update_plan" {
 
 data "aws_region" "current" {}
 data "aws_caller_identity" "current" {}
+
+# =============================================================================
+# Custom Domain Configuration
+# =============================================================================
+
+# API Gateway Custom Domain
+resource "aws_apigatewayv2_domain_name" "api" {
+  count       = var.api_domain_name != "" ? 1 : 0
+  domain_name = var.api_domain_name
+
+  domain_name_configuration {
+    certificate_arn = var.api_certificate_arn
+    endpoint_type   = "REGIONAL"
+    security_policy = "TLS_1_2"
+  }
+
+  tags = {
+    Name = "${var.name_prefix}-api-domain"
+  }
+}
+
+# API Gateway Domain Mapping
+resource "aws_apigatewayv2_api_mapping" "api" {
+  count       = var.api_domain_name != "" ? 1 : 0
+  api_id      = aws_apigatewayv2_api.main.id
+  domain_name = aws_apigatewayv2_domain_name.api[0].id
+  stage       = aws_apigatewayv2_stage.main.id
+}
