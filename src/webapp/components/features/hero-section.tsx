@@ -48,8 +48,8 @@ export function HeroSection({
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary-400 opacity-75" />
               <span className="relative inline-flex rounded-full h-2 w-2 bg-primary-500" />
             </span>
-            <span className="text-dark-300">Propulse par</span>
-            <span className="font-semibold gradient-text">Claude AI</span>
+            <span className="font-semibold gradient-text">Nouveau</span>
+            <span className="text-dark-300">Creez des apps en quelques secondes</span>
           </span>
         </motion.div>
 
