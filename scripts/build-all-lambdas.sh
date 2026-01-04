@@ -12,8 +12,8 @@ LAMBDAS_DIR="$SCRIPT_DIR/../src/lambdas"
 echo "🚀 Building all Lambda functions..."
 echo ""
 
-# Find all Lambda directories (exclude shared)
-LAMBDA_NAMES=$(ls -d "$LAMBDAS_DIR"/*/ | grep -v shared | xargs -n 1 basename)
+# Find all Lambda directories (exclude shared and layers)
+LAMBDA_NAMES=$(ls -d "$LAMBDAS_DIR"/*/ | grep -v -E "(shared|layers)" | xargs -n 1 basename)
 
 SUCCESS_COUNT=0
 FAIL_COUNT=0
