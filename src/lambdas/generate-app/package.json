@@ -1,0 +1,17 @@
+{
+  "name": "koumpa-generate-app",
+  "version": "1.0.0",
+  "description": "Lambda function for generating apps using Claude AI",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "build": "../../scripts/build-lambda.sh generate-app"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "@types/aws-lambda": "^8.10.130"
+  }
+}
