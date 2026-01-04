@@ -25,10 +25,10 @@ for LAMBDA_NAME in $LAMBDA_NAMES; do
   echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
   
   if "$SCRIPT_DIR/build-lambda.sh" "$LAMBDA_NAME"; then
-    ((SUCCESS_COUNT++))
+    SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
     echo "✅ $LAMBDA_NAME built successfully"
   else
-    ((FAIL_COUNT++))
+    FAIL_COUNT=$((FAIL_COUNT + 1))
     FAILED_LAMBDAS+=("$LAMBDA_NAME")
     echo "❌ $LAMBDA_NAME build failed"
   fi
