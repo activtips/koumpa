@@ -1,6 +1,9 @@
 /**
  * Environment configuration
  * Centralizes all environment variables with type safety
+ *
+ * IMPORTANT: Next.js requires direct access to process.env.NEXT_PUBLIC_*
+ * for static builds. Dynamic access like process.env[key] won't be inlined.
  */
 
 interface EnvConfig {
@@ -20,23 +23,16 @@ interface EnvConfig {
   isProduction: boolean;
 }
 
-function getEnvVar(key: string, defaultValue = ''): string {
-  if (typeof window !== 'undefined') {
-    return process.env[key] || defaultValue;
-  }
-  return process.env[key] || defaultValue;
-}
-
 export const env: EnvConfig = {
-  apiUrl: getEnvVar('NEXT_PUBLIC_API_URL', 'https://api.staging.koumpa.com'),
+  apiUrl: process.env.NEXT_PUBLIC_API_URL || 'https://api.staging.koumpa.com',
 
   cognito: {
-    userPoolId: getEnvVar('NEXT_PUBLIC_COGNITO_USER_POOL_ID', ''),
-    clientId: getEnvVar('NEXT_PUBLIC_COGNITO_CLIENT_ID', ''),
-    domain: getEnvVar('NEXT_PUBLIC_COGNITO_DOMAIN', ''),
-    region: getEnvVar('NEXT_PUBLIC_AWS_REGION', 'eu-west-1'),
+    userPoolId: process.env.NEXT_PUBLIC_COGNITO_USER_POOL_ID || '',
+    clientId: process.env.NEXT_PUBLIC_COGNITO_CLIENT_ID || '',
+    domain: process.env.NEXT_PUBLIC_COGNITO_DOMAIN || '',
+    region: process.env.NEXT_PUBLIC_AWS_REGION || 'eu-west-1',
   },
 
-  appUrl: getEnvVar('NEXT_PUBLIC_APP_URL', 'https://staging.koumpa.com'),
+  appUrl: process.env.NEXT_PUBLIC_APP_URL || 'https://staging.koumpa.com',
   isProduction: process.env.NODE_ENV === 'production',
 };
