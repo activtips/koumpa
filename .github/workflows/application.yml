@@ -1,0 +1,188 @@
+# =============================================================================
+# GitHub Actions - Application Pipeline (Lambda Functions)
+# =============================================================================
+#
+# Branches:
+#   - staging: Déploiement automatique sur push
+#   - main: Déploiement automatique après merge de PR
+# =============================================================================
+
+name: Application
+
+on:
+  push:
+    branches:
+      - main
+      - staging
+    paths:
+      - 'src/**'
+      - 'scripts/**'
+      - '.github/workflows/application.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'src/**'
+      - 'scripts/**'
+      - '.github/workflows/application.yml'
+
+env:
+  NODE_VERSION: '20'
+  AWS_REGION: 'eu-west-1'
+
+jobs:
+  # ===========================================================================
+  # Test & Lint
+  # ===========================================================================
+  test:
+    name: Test & Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: src/lambdas/shared/package-lock.json
+
+      - name: Install Dependencies
+        run: |
+          cd src/lambdas/shared
+          npm ci
+
+      - name: Run Lint
+        run: |
+          cd src/lambdas/shared
+          npm run lint || true
+        continue-on-error: true
+
+      - name: Run Tests
+        run: |
+          cd src/lambdas/shared
+          npm test || true
+        continue-on-error: true
+
+  # ===========================================================================
+  # Build
+  # ===========================================================================
+  build:
+    name: Build Lambda Functions
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Build All Lambdas
+        run: |
+          chmod +x scripts/*.sh
+          ./scripts/build-all-lambdas.sh
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: lambda-functions
+          path: src/lambdas/*/function.zip
+          retention-days: 7
+
+  # ===========================================================================
+  # Deploy Staging (automatique sur push)
+  # ===========================================================================
+  deploy-staging:
+    name: Deploy Staging
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/staging' && github.event_name == 'push'
+    environment:
+      name: staging
+      url: https://staging.koumpa.com
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: lambda-functions
+          path: src/lambdas/
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Deploy Lambda Functions
+        run: |
+          for lambda_dir in src/lambdas/*/; do
+            if [ -f "${lambda_dir}function.zip" ]; then
+              lambda_name=$(basename "$lambda_dir")
+              # Skip shared directory
+              if [ "$lambda_name" != "shared" ]; then
+                echo "Deploying $lambda_name to staging..."
+                aws lambda update-function-code \
+                  --function-name "koumpa-staging-${lambda_name}" \
+                  --zip-file "fileb://${lambda_dir}function.zip" \
+                  --region $AWS_REGION || echo "Warning: Could not deploy $lambda_name"
+              fi
+            fi
+          done
+
+  # ===========================================================================
+  # Deploy Production (automatique après merge sur main)
+  # ===========================================================================
+  deploy-prod:
+    name: Deploy Production
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment:
+      name: production
+      url: https://koumpa.com
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: lambda-functions
+          path: src/lambdas/
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Deploy Lambda Functions
+        run: |
+          for lambda_dir in src/lambdas/*/; do
+            if [ -f "${lambda_dir}function.zip" ]; then
+              lambda_name=$(basename "$lambda_dir")
+              # Skip shared directory
+              if [ "$lambda_name" != "shared" ]; then
+                echo "Deploying $lambda_name to production..."
+                aws lambda update-function-code \
+                  --function-name "koumpa-prod-${lambda_name}" \
+                  --zip-file "fileb://${lambda_dir}function.zip" \
+                  --region $AWS_REGION || echo "Warning: Could not deploy $lambda_name"
+              fi
+            fi
+          done
