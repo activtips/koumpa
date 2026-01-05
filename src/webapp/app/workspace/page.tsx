@@ -47,46 +47,76 @@ function WorkspaceContent() {
   useEffect(() => {
     if (!projectId || !isAuthenticated) return;
 
-    const fetchProject = async () => {
+    const loadProject = async () => {
       try {
         setIsLoading(true);
-        const projectData = await projectsApi.get(projectId);
+
+        // First, check sessionStorage for pending project (from generation)
+        const pendingProjectJson = sessionStorage.getItem('pendingProject');
+        let projectData: Project | null = null;
+
+        if (pendingProjectJson) {
+          const pendingProject = JSON.parse(pendingProjectJson);
+          if (pendingProject.id === projectId) {
+            projectData = pendingProject;
+            sessionStorage.removeItem('pendingProject');
+          }
+        }
+
+        // If not in sessionStorage, try to fetch from API
+        if (!projectData) {
+          try {
+            projectData = await projectsApi.get(projectId);
+          } catch {
+            // API might not have the endpoint yet, create a minimal project
+            projectData = {
+              id: projectId,
+              userId: '',
+              name: 'Projet',
+              description: '',
+              deployUrl: '',
+              status: 'pending' as const,
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+            };
+          }
+        }
+
         setProject(projectData);
 
         // Add initial message from project description
-        if (projectData.description) {
-          setMessages([
-            {
-              id: '1',
-              role: 'user',
-              content: projectData.description,
-              timestamp: new Date(projectData.createdAt),
-            },
-            {
-              id: '2',
-              role: 'assistant',
-              content: `J'ai commence a generer votre application "${projectData.name}". ${
-                projectData.status === 'deployed'
-                  ? 'Elle est maintenant deployee!'
-                  : projectData.status === 'generating'
-                  ? 'La generation est en cours...'
-                  : projectData.status === 'failed'
-                  ? 'Une erreur est survenue lors de la generation.'
-                  : 'En attente de traitement...'
-              }`,
-              timestamp: new Date(projectData.createdAt),
-            },
-          ]);
-        }
+        const description = projectData.description || 'Votre application';
+        setMessages([
+          {
+            id: '1',
+            role: 'user',
+            content: description,
+            timestamp: new Date(projectData.createdAt),
+          },
+          {
+            id: '2',
+            role: 'assistant',
+            content: `J'ai genere votre application "${projectData.name}". ${
+              projectData.status === 'deployed'
+                ? 'Elle est maintenant deployee!'
+                : projectData.status === 'generating'
+                ? 'La generation est en cours...'
+                : projectData.status === 'failed'
+                ? 'Une erreur est survenue lors de la generation.'
+                : 'En attente de traitement...'
+            }`,
+            timestamp: new Date(projectData.createdAt),
+          },
+        ]);
       } catch (err) {
-        console.error('Failed to fetch project:', err);
+        console.error('Failed to load project:', err);
         setError('Impossible de charger le projet');
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchProject();
+    loadProject();
   }, [projectId, isAuthenticated]);
 
   // Poll for status updates
@@ -106,7 +136,7 @@ function WorkspaceContent() {
             {
               id: Date.now().toString(),
               role: 'assistant',
-              content: `Votre application est prete! Elle est accessible a l'adresse: https://${updatedProject.subdomain}.staging.koumpa.com`,
+              content: `Votre application est prete! Elle est accessible a l'adresse: ${updatedProject.deployUrl}`,
               timestamp: new Date(),
             },
           ]);
@@ -195,7 +225,7 @@ function WorkspaceContent() {
 
         {/* Right Panel - Preview */}
         <PreviewPanel
-          subdomain={project?.subdomain}
+          deployUrl={project?.deployUrl}
           status={project?.status}
         />
       </div>

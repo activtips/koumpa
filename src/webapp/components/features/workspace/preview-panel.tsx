@@ -15,7 +15,7 @@ import { cn } from '@/lib/utils/cn';
 import type { ProjectStatus } from '@/types';
 
 interface PreviewPanelProps {
-  subdomain?: string;
+  deployUrl?: string;
   status?: ProjectStatus;
 }
 
@@ -28,15 +28,13 @@ const deviceSizes: Record<DeviceMode, { width: string; height: string }> = {
   mobile: { width: '375px', height: '667px' },
 };
 
-export function PreviewPanel({ subdomain, status }: PreviewPanelProps) {
+export function PreviewPanel({ deployUrl, status }: PreviewPanelProps) {
   const [viewMode, setViewMode] = useState<ViewMode>('preview');
   const [deviceMode, setDeviceMode] = useState<DeviceMode>('desktop');
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [iframeKey, setIframeKey] = useState(0);
 
-  const previewUrl = subdomain
-    ? `https://${subdomain}.staging.koumpa.com`
-    : null;
+  const previewUrl = deployUrl || null;
 
   const handleRefresh = () => {
     setIsRefreshing(true);

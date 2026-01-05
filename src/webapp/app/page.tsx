@@ -20,8 +20,10 @@ export default function HomePage() {
     prompt,
     setPrompt,
     isGenerating,
+    error,
     result,
     handleSubmit,
+    clearError,
     clearResult,
   } = usePrompt();
 
@@ -29,13 +31,22 @@ export default function HomePage() {
   const [authMode, setAuthMode] = useState<AuthMode>('login');
   const [pendingPrompt, setPendingPrompt] = useState<string | null>(null);
 
-  // Redirect to workspace when generation starts
+  // Redirect to workspace when generation completes
   useEffect(() => {
     if (result?.projectId) {
+      // Store project data in sessionStorage for workspace to use
+      sessionStorage.setItem('pendingProject', JSON.stringify({
+        id: result.projectId,
+        name: result.name,
+        description: prompt,
+        deployUrl: result.deployUrl,
+        status: result.status,
+        createdAt: new Date().toISOString(),
+      }));
       router.push(`/workspace?id=${result.projectId}`);
       clearResult();
     }
-  }, [result, router, clearResult]);
+  }, [result, prompt, router, clearResult]);
 
   const handlePromptSubmit = async () => {
     // If not authenticated, show auth modal
@@ -82,6 +93,7 @@ export default function HomePage() {
           onPromptChange={setPrompt}
           onSubmit={handlePromptSubmit}
           isLoading={isGenerating}
+          error={error}
         />
 
         <FeaturesSection />

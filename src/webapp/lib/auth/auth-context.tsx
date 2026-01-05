@@ -83,7 +83,7 @@ export function AuthProvider({ children }: AuthProviderProps): JSX.Element {
 
   const fetchUserFromApi = async (accessToken: string): Promise<User> => {
     try {
-      const response = await fetch(`${env.apiUrl}/user`, {
+      const response = await fetch(`${env.apiUrl}/api/user`, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },

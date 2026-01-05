@@ -11,6 +11,7 @@ interface PromptInputProps {
   onSubmit: () => void;
   isLoading?: boolean;
   placeholder?: string;
+  error?: string | null;
 }
 
 const suggestions = [
@@ -27,6 +28,7 @@ export function PromptInput({
   onSubmit,
   isLoading = false,
   placeholder = 'Decrivez l\'application que vous voulez creer...',
+  error,
 }: PromptInputProps) {
   const [isFocused, setIsFocused] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -130,6 +132,17 @@ export function PromptInput({
           </div>
         </div>
       </motion.div>
+
+      {/* Error Display */}
+      {error && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mt-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20"
+        >
+          <p className="text-sm text-red-400 text-center">{error}</p>
+        </motion.div>
+      )}
 
       {/* Suggestions */}
       <div className="mt-6">

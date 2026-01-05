@@ -16,7 +16,7 @@ export interface Project {
   userId: string;
   name: string;
   description: string;
-  subdomain: string;
+  deployUrl: string;
   status: ProjectStatus;
   createdAt: string;
   updatedAt: string;
@@ -32,9 +32,10 @@ export interface GenerateAppRequest {
 
 export interface GenerateAppResponse {
   projectId: string;
-  subdomain: string;
+  deployUrl: string;
+  name: string;
   status: ProjectStatus;
-  estimatedTime: number;
+  creditsRemaining?: number;
 }
 
 export interface ApiError {

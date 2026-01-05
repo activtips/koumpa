@@ -38,9 +38,7 @@ export function WorkspaceHeader({ project }: WorkspaceHeaderProps) {
     }
   };
 
-  const previewUrl = project?.subdomain
-    ? `https://${project.subdomain}.staging.koumpa.com`
-    : null;
+  const previewUrl = project?.deployUrl || null;
 
   return (
     <header className="h-14 bg-dark-800 border-b border-dark-700 flex items-center justify-between px-4">

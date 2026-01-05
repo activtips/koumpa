@@ -8,6 +8,7 @@ interface HeroSectionProps {
   onPromptChange: (value: string) => void;
   onSubmit: () => void;
   isLoading: boolean;
+  error?: string | null;
 }
 
 export function HeroSection({
@@ -15,6 +16,7 @@ export function HeroSection({
   onPromptChange,
   onSubmit,
   isLoading,
+  error,
 }: HeroSectionProps) {
   return (
     <section className="relative min-h-screen flex items-center justify-center pt-24 pb-16 overflow-hidden">
@@ -85,6 +87,7 @@ export function HeroSection({
             onChange={onPromptChange}
             onSubmit={onSubmit}
             isLoading={isLoading}
+            error={error}
           />
         </motion.div>
 
