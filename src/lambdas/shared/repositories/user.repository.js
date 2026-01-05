@@ -24,6 +24,27 @@ class UserRepository extends BaseRepository {
   }
 
   /**
+   * Get user by ID or create if not exists
+   * Used as fallback when Cognito trigger didn't create user
+   */
+  async getOrCreateUser(userId, email = null) {
+    try {
+      return await this.getUserById(userId);
+    } catch (error) {
+      if (error.name === 'NotFoundError' || error.message?.includes('not found')) {
+        // Create user with default values
+        const userData = {
+          userId,
+          email: email || `user-${userId.substring(0, 8)}@unknown.com`,
+          name: null
+        };
+        return await this.createUser(userData);
+      }
+      throw error;
+    }
+  }
+
+  /**
    * Get user by email (using GSI)
    */
   async getUserByEmail(email) {

@@ -27,12 +27,40 @@ class PlanRepository extends BaseRepository {
 
     const plan = await this.get({ id: planId });
     if (!plan) {
-      throw new NotFoundError('Plan', planId);
+      // Return default free plan if not found (fallback for missing plans)
+      const defaultPlan = this.getDefaultFreePlan();
+      this.setCache(planId, defaultPlan);
+      return defaultPlan;
     }
 
     // Cache the result
     this.setCache(planId, plan);
     return plan;
+  }
+
+  /**
+   * Get default free plan (fallback when plans table is empty)
+   */
+  getDefaultFreePlan() {
+    return {
+      id: 'free',
+      name: 'Free',
+      priceMonthly: 0,
+      priceYearly: 0,
+      creditsPerMonth: 5,
+      dailyBonusCredits: 1,
+      maxRolloverCredits: 3,
+      maxProjects: 3,
+      maxPrivateProjects: 0,
+      features: {
+        codeGeneration: true,
+        publicProjects: true
+      },
+      maxTeamMembers: 1,
+      displayOrder: 0,
+      isVisible: true,
+      recommended: false
+    };
   }
 
   /**

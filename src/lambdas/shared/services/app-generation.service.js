@@ -26,8 +26,8 @@ class AppGenerationService {
   async generateApp(userId, prompt, options = {}) {
     this.logger.info('Starting app generation', { userId, promptLength: prompt.length });
 
-    // 1. Get user and validate
-    const user = await this.userRepo.getUserById(userId);
+    // 1. Get user (or create if not exists - fallback for users created before trigger)
+    const user = await this.userRepo.getOrCreateUser(userId);
     
     // Check if user is banned
     if (user.banned) {
