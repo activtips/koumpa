@@ -140,6 +140,16 @@ class DatabaseError extends AppError {
     super(`Database operation failed: ${operation}`, 500);
     this.operation = operation;
     this.originalError = originalError?.message;
+    this.originalCode = originalError?.code || originalError?.name;
+  }
+
+  toJSON() {
+    return {
+      ...super.toJSON(),
+      operation: this.operation,
+      originalError: this.originalError,
+      originalCode: this.originalCode
+    };
   }
 }
 

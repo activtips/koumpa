@@ -59,14 +59,24 @@ class BaseRepository {
    */
   async put(item) {
     try {
+      console.log('DynamoDB PUT - Table:', this.tableName);
+      console.log('DynamoDB PUT - Item keys:', Object.keys(item));
+
       const command = new PutCommand({
         TableName: this.tableName,
         Item: item
       });
 
       await this.docClient.send(command);
+      console.log('DynamoDB PUT - Success');
       return item;
     } catch (error) {
+      console.error('DynamoDB PUT ERROR:', {
+        table: this.tableName,
+        errorName: error.name,
+        errorMessage: error.message,
+        errorCode: error.code || error.$metadata?.httpStatusCode
+      });
       throw new DatabaseError('put', error);
     }
   }
