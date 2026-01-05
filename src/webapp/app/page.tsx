@@ -11,6 +11,8 @@ import { AuthModal } from '@/components/features/auth-modal';
 import { useAuth } from '@/lib/auth/auth-context';
 import { usePrompt } from '@/lib/hooks/use-prompt';
 
+type AuthMode = 'login' | 'register';
+
 export default function HomePage() {
   const router = useRouter();
   const { isAuthenticated } = useAuth();
@@ -24,6 +26,7 @@ export default function HomePage() {
   } = usePrompt();
 
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [authMode, setAuthMode] = useState<AuthMode>('login');
   const [pendingPrompt, setPendingPrompt] = useState<string | null>(null);
 
   // Redirect to workspace when generation starts
@@ -38,6 +41,7 @@ export default function HomePage() {
     // If not authenticated, show auth modal
     if (!isAuthenticated) {
       setPendingPrompt(prompt);
+      setAuthMode('register');
       setIsAuthModalOpen(true);
       return;
     }
@@ -51,15 +55,26 @@ export default function HomePage() {
     setPendingPrompt(null);
   };
 
+  const handleLoginClick = () => {
+    setAuthMode('login');
+    setIsAuthModalOpen(true);
+  };
+
+  const handleRegisterClick = () => {
+    setAuthMode('register');
+    setIsAuthModalOpen(true);
+  };
+
   const handleSelectPlan = () => {
     if (!isAuthenticated) {
+      setAuthMode('register');
       setIsAuthModalOpen(true);
     }
   };
 
   return (
     <div className="min-h-screen bg-dark-900">
-      <Navbar onAuthClick={() => setIsAuthModalOpen(true)} />
+      <Navbar onLoginClick={handleLoginClick} onRegisterClick={handleRegisterClick} />
 
       <main>
         <HeroSection
@@ -79,6 +94,7 @@ export default function HomePage() {
       <AuthModal
         isOpen={isAuthModalOpen}
         onClose={handleAuthModalClose}
+        initialMode={authMode}
         pendingPrompt={pendingPrompt || undefined}
       />
     </div>

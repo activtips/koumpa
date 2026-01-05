@@ -9,10 +9,11 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils/cn';
 
 interface NavbarProps {
-  onAuthClick: () => void;
+  onLoginClick: () => void;
+  onRegisterClick: () => void;
 }
 
-export function Navbar({ onAuthClick }: NavbarProps) {
+export function Navbar({ onLoginClick, onRegisterClick }: NavbarProps) {
   const { isAuthenticated, user, logout } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -66,10 +67,10 @@ export function Navbar({ onAuthClick }: NavbarProps) {
                 </>
               ) : (
                 <>
-                  <Button variant="ghost" size="sm" onClick={onAuthClick}>
+                  <Button variant="ghost" size="sm" onClick={onLoginClick}>
                     Connexion
                   </Button>
-                  <Button variant="primary" size="sm" onClick={onAuthClick}>
+                  <Button variant="primary" size="sm" onClick={onRegisterClick}>
                     Commencer
                   </Button>
                 </>
@@ -121,10 +122,10 @@ export function Navbar({ onAuthClick }: NavbarProps) {
               </>
             ) : (
               <>
-                <Button variant="ghost" size="md" className="w-full" onClick={onAuthClick}>
+                <Button variant="ghost" size="md" className="w-full" onClick={onLoginClick}>
                   Connexion
                 </Button>
-                <Button variant="primary" size="md" className="w-full" onClick={onAuthClick}>
+                <Button variant="primary" size="md" className="w-full" onClick={onRegisterClick}>
                   Commencer
                 </Button>
               </>

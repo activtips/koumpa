@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Mail, Lock, User, ArrowRight, Loader2, Sparkles } from 'lucide-react';
 import { useAuth } from '@/lib/auth/auth-context';
@@ -20,13 +20,21 @@ interface AuthModalProps {
 export function AuthModal({
   isOpen,
   onClose,
-  initialMode = 'register',
+  initialMode = 'login',
   pendingPrompt,
 }: AuthModalProps) {
   const { login, register, confirmRegistration } = useAuth();
   const [mode, setMode] = useState<AuthMode>(initialMode);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Reset mode when modal opens or initialMode changes
+  useEffect(() => {
+    if (isOpen) {
+      setMode(initialMode);
+      setError(null);
+    }
+  }, [isOpen, initialMode]);
 
   // Form state
   const [email, setEmail] = useState('');
