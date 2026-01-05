@@ -3,82 +3,79 @@
  * Clean architecture with separation of concerns
  */
 
-let AppGenerationService, ErrorHandler, createLogger, validateRequest, appService;
+// Simple test handler first to verify Lambda can start
+exports.handler = async (event, context) => {
+  console.log('Lambda started successfully!');
+  console.log('Event:', JSON.stringify(event, null, 2));
 
-try {
-  AppGenerationService = require('./shared/services/app-generation.service');
-  ErrorHandler = require('./shared/errors').ErrorHandler;
-  createLogger = require('./shared/utils/logger').createLogger;
-  validateRequest = require('./validators').validateRequest;
+  // Test basic initialization
+  let initResult = { step: 'start' };
 
-  // Initialize service (reused across warm starts)
-  appService = new AppGenerationService();
-} catch (initError) {
-  console.error('LAMBDA INIT ERROR:', initError.message, initError.stack);
-  // Export a handler that returns the init error
-  exports.handler = async () => ({
-    statusCode: 500,
-    headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
-    body: JSON.stringify({
-      success: false,
-      error: {
-        message: `Lambda initialization failed: ${initError.message}`,
-        stack: initError.stack
-      }
-    })
-  });
-}
+  try {
+    initResult.step = 'loading errors';
+    const { ErrorHandler } = require('./shared/errors');
+    initResult.errorsLoaded = true;
 
-/**
- * Main Lambda Handler
- */
-if (ErrorHandler) {
-  exports.handler = ErrorHandler.wrapHandler(async (event, context) => {
-  const logger = createLogger('generate-app', context.requestId);
-  const startTime = Date.now();
+    initResult.step = 'loading config';
+    const config = require('./shared/config');
+    initResult.configLoaded = true;
+    initResult.tables = config.tables;
 
-  // Log invocation
-  logger.logInvocationStart(event);
+    initResult.step = 'loading validators';
+    const { validateRequest } = require('./validators');
+    initResult.validatorsLoaded = true;
 
-  // Extract user ID from JWT
-  const userId = event.requestContext.authorizer.jwt.claims.sub;
-  
-  // Parse and validate request
-  const body = JSON.parse(event.body);
-  const validatedData = validateRequest(body);
+    initResult.step = 'loading app-generation service';
+    const AppGenerationService = require('./shared/services/app-generation.service');
+    initResult.serviceLoaded = true;
 
-  logger.info('Processing app generation request', {
-    userId,
-    promptLength: validatedData.prompt.length,
-    framework: validatedData.framework
-  });
+    initResult.step = 'creating service instance';
+    const appService = new AppGenerationService();
+    initResult.serviceCreated = true;
 
-  // Generate app
-  const result = await appService.generateApp(
-    userId,
-    validatedData.prompt,
-    {
-      framework: validatedData.framework,
-      isPublic: validatedData.isPublic,
-      additionalInstructions: validatedData.additionalInstructions
+    // If we get here, try the actual generation
+    initResult.step = 'extracting userId';
+    const userId = event.requestContext?.authorizer?.jwt?.claims?.sub;
+    if (!userId) {
+      return {
+        statusCode: 401,
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+        body: JSON.stringify({ success: false, error: 'No userId in JWT' })
+      };
     }
-  );
 
-  // Log completion
-  const duration = Date.now() - startTime;
-  logger.logInvocationEnd(duration, 200);
+    initResult.step = 'parsing body';
+    const body = JSON.parse(event.body);
+    const validatedData = validateRequest(body);
 
-  // Return success response
-  return {
-    statusCode: 200,
-    headers: {
-      'Content-Type': 'application/json',
-      'Access-Control-Allow-Origin': '*'
-    },
-    body: JSON.stringify({
-      success: true,
-      data: result
-    })
-  };
-  });
-}
+    initResult.step = 'generating app';
+    const result = await appService.generateApp(userId, validatedData.prompt, {
+      framework: validatedData.framework,
+      isPublic: validatedData.isPublic
+    });
+
+    return {
+      statusCode: 200,
+      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+      body: JSON.stringify({ success: true, data: result })
+    };
+
+  } catch (error) {
+    console.error('Error at step:', initResult.step);
+    console.error('Error:', error.message, error.stack);
+
+    return {
+      statusCode: 500,
+      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+      body: JSON.stringify({
+        success: false,
+        error: {
+          step: initResult.step,
+          message: error.message,
+          stack: error.stack,
+          initResult
+        }
+      })
+    };
+  }
+};
