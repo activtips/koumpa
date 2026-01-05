@@ -72,7 +72,8 @@ class Config {
     if (missing.length > 0) {
       console.error('MISSING ENV VARS:', missing);
       console.error('AVAILABLE ENV VARS:', Object.keys(process.env).filter(k => !k.includes('SECRET') && !k.includes('KEY')));
-      throw new Error(`Missing required environment variables: ${missing.join(', ')}`);
+      // Don't throw - log warning and continue so we can see error in response
+      console.warn(`WARNING: Missing required environment variables: ${missing.join(', ')}`);
     }
   }
 
