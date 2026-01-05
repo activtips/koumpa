@@ -53,8 +53,12 @@ export function AuthProvider({ children }: AuthProviderProps): JSX.Element {
       const session = await fetchAuthSession();
 
       if (cognitoUser && session.tokens) {
-        // Fetch user details from our API
+        // Fetch user details from our API (but don't fail if API is unavailable)
         const user = await fetchUserFromApi(session.tokens.accessToken.toString());
+        // Use Cognito email if API doesn't return one
+        if (!user.email && cognitoUser.signInDetails?.loginId) {
+          user.email = cognitoUser.signInDetails.loginId;
+        }
         setState({
           isAuthenticated: true,
           isLoading: false,
@@ -67,7 +71,8 @@ export function AuthProvider({ children }: AuthProviderProps): JSX.Element {
           user: null,
         });
       }
-    } catch {
+    } catch (error) {
+      console.log('No authenticated user found');
       setState({
         isAuthenticated: false,
         isLoading: false,
@@ -105,6 +110,13 @@ export function AuthProvider({ children }: AuthProviderProps): JSX.Element {
     setState(prev => ({ ...prev, isLoading: true }));
 
     try {
+      // Sign out any existing session first to avoid "already signed in" error
+      try {
+        await signOut();
+      } catch {
+        // Ignore signOut errors
+      }
+
       const signInInput: SignInInput = {
         username: email,
         password,
