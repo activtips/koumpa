@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Navbar } from '@/components/layout/navbar';
 import { Footer } from '@/components/layout/footer';
 import { HeroSection } from '@/components/features/hero-section';
@@ -11,16 +12,27 @@ import { useAuth } from '@/lib/auth/auth-context';
 import { usePrompt } from '@/lib/hooks/use-prompt';
 
 export default function HomePage() {
+  const router = useRouter();
   const { isAuthenticated } = useAuth();
   const {
     prompt,
     setPrompt,
     isGenerating,
+    result,
     handleSubmit,
+    clearResult,
   } = usePrompt();
 
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [pendingPrompt, setPendingPrompt] = useState<string | null>(null);
+
+  // Redirect to workspace when generation starts
+  useEffect(() => {
+    if (result?.projectId) {
+      router.push(`/workspace/${result.projectId}`);
+      clearResult();
+    }
+  }, [result, router, clearResult]);
 
   const handlePromptSubmit = async () => {
     // If not authenticated, show auth modal
