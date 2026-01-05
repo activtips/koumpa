@@ -30,4 +30,4 @@ const handler = async (event) => {
   };
 };
 
-module.exports = { handler: ErrorHandler.wrap(handler) };
+module.exports = { handler: ErrorHandler.wrapHandler(handler) };
