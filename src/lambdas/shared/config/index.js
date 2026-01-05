@@ -35,7 +35,7 @@ class Config {
     // Claude API Configuration
     this.claude = {
       model: 'claude-sonnet-4-20250514',
-      maxTokens: 4096,
+      maxTokens: 8192,
       temperature: 0.7
     };
 

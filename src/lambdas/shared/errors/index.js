@@ -151,6 +151,15 @@ class ErrorHandler {
    * Handle error and return API Gateway response
    */
   static handle(error, logger = console) {
+    // Always log full error details for debugging
+    console.error('ERROR DETAILS:', JSON.stringify({
+      name: error.name,
+      message: error.message,
+      statusCode: error.statusCode,
+      stack: error.stack,
+      isOperational: error.isOperational
+    }, null, 2));
+
     // Log error
     if (error.isOperational) {
       logger.warn('Operational error:', {
@@ -173,6 +182,28 @@ class ErrorHandler {
     const isProduction = process.env.NODE_ENV === 'production';
     const shouldExposeDetails = error.isOperational || !isProduction;
 
+    // Build error response body
+    let errorBody;
+    if (shouldExposeDetails) {
+      // Check if error has toJSON method (AppError and subclasses)
+      if (typeof error.toJSON === 'function') {
+        errorBody = error.toJSON();
+      } else {
+        // Regular Error - extract info manually
+        errorBody = {
+          error: error.name || 'Error',
+          message: error.message || 'An error occurred',
+          statusCode
+        };
+      }
+    } else {
+      errorBody = {
+        error: 'InternalServerError',
+        message: 'An unexpected error occurred',
+        statusCode: 500
+      };
+    }
+
     // Build response
     const response = {
       statusCode,
@@ -182,11 +213,7 @@ class ErrorHandler {
       },
       body: JSON.stringify({
         success: false,
-        error: shouldExposeDetails ? error.toJSON() : {
-          error: 'InternalServerError',
-          message: 'An unexpected error occurred',
-          statusCode: 500
-        }
+        error: errorBody
       })
     };
 
