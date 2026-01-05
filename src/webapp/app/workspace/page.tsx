@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useEffect, useState, Suspense } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { ChatPanel } from '@/components/features/workspace/chat-panel';
 import { PreviewPanel } from '@/components/features/workspace/preview-panel';
 import { WorkspaceHeader } from '@/components/features/workspace/workspace-header';
@@ -17,11 +17,11 @@ interface Message {
   timestamp: Date;
 }
 
-export default function WorkspacePage() {
-  const params = useParams();
+function WorkspaceContent() {
+  const searchParams = useSearchParams();
   const router = useRouter();
   const { isAuthenticated, isLoading: authLoading } = useAuth();
-  const projectId = params.projectId as string;
+  const projectId = searchParams.get('id');
 
   const [project, setProject] = useState<Project | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -35,6 +35,13 @@ export default function WorkspacePage() {
       router.push('/');
     }
   }, [authLoading, isAuthenticated, router]);
+
+  // Redirect if no project ID
+  useEffect(() => {
+    if (!authLoading && isAuthenticated && !projectId) {
+      router.push('/');
+    }
+  }, [authLoading, isAuthenticated, projectId, router]);
 
   // Fetch project data
   useEffect(() => {
@@ -58,13 +65,13 @@ export default function WorkspacePage() {
             {
               id: '2',
               role: 'assistant',
-              content: `J'ai commencé à générer votre application "${projectData.name}". ${
+              content: `J'ai commence a generer votre application "${projectData.name}". ${
                 projectData.status === 'deployed'
-                  ? 'Elle est maintenant déployée!'
+                  ? 'Elle est maintenant deployee!'
                   : projectData.status === 'generating'
-                  ? 'La génération est en cours...'
+                  ? 'La generation est en cours...'
                   : projectData.status === 'failed'
-                  ? 'Une erreur est survenue lors de la génération.'
+                  ? 'Une erreur est survenue lors de la generation.'
                   : 'En attente de traitement...'
               }`,
               timestamp: new Date(projectData.createdAt),
@@ -84,7 +91,7 @@ export default function WorkspacePage() {
 
   // Poll for status updates
   useEffect(() => {
-    if (!project || project.status === 'deployed' || project.status === 'failed') {
+    if (!project || !projectId || project.status === 'deployed' || project.status === 'failed') {
       return;
     }
 
@@ -99,7 +106,7 @@ export default function WorkspacePage() {
             {
               id: Date.now().toString(),
               role: 'assistant',
-              content: `Votre application est prête! Elle est accessible à l'adresse: https://${updatedProject.subdomain}.staging.koumpa.com`,
+              content: `Votre application est prete! Elle est accessible a l'adresse: https://${updatedProject.subdomain}.staging.koumpa.com`,
               timestamp: new Date(),
             },
           ]);
@@ -133,7 +140,7 @@ export default function WorkspacePage() {
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: `Je comprends votre demande: "${content}". Cette fonctionnalité de modification sera bientôt disponible. Pour l'instant, vous pouvez voir l'aperçu de votre application à droite.`,
+        content: `Je comprends votre demande: "${content}". Cette fonctionnalite de modification sera bientot disponible. Pour l'instant, vous pouvez voir l'apercu de votre application a droite.`,
         timestamp: new Date(),
       };
 
@@ -166,7 +173,7 @@ export default function WorkspacePage() {
             onClick={() => router.push('/')}
             className="text-primary-400 hover:text-primary-300"
           >
-            Retour à l'accueil
+            Retour a l'accueil
           </button>
         </div>
       </div>
@@ -193,5 +200,22 @@ export default function WorkspacePage() {
         />
       </div>
     </div>
+  );
+}
+
+export default function WorkspacePage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-dark-900 flex items-center justify-center">
+          <div className="text-center">
+            <Loader2 className="w-8 h-8 animate-spin text-primary-500 mx-auto mb-4" />
+            <p className="text-dark-400">Chargement...</p>
+          </div>
+        </div>
+      }
+    >
+      <WorkspaceContent />
+    </Suspense>
   );
 }

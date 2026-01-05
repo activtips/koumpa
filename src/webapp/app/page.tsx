@@ -29,7 +29,7 @@ export default function HomePage() {
   // Redirect to workspace when generation starts
   useEffect(() => {
     if (result?.projectId) {
-      router.push(`/workspace/${result.projectId}`);
+      router.push(`/workspace?id=${result.projectId}`);
       clearResult();
     }
   }, [result, router, clearResult]);
