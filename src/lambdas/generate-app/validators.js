@@ -2,8 +2,8 @@
  * Request Validators for Generate App Lambda
  */
 
-const { ValidationError } = require('../shared/errors');
-const config = require('../shared/config');
+const { ValidationError } = require('./shared/errors');
+const config = require('./shared/config');
 
 /**
  * Validate generate app request

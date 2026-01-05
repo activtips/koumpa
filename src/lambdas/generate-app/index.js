@@ -6,9 +6,9 @@
 let AppGenerationService, ErrorHandler, createLogger, validateRequest, appService;
 
 try {
-  AppGenerationService = require('../shared/services/app-generation.service');
-  ErrorHandler = require('../shared/errors').ErrorHandler;
-  createLogger = require('../shared/utils/logger').createLogger;
+  AppGenerationService = require('./shared/services/app-generation.service');
+  ErrorHandler = require('./shared/errors').ErrorHandler;
+  createLogger = require('./shared/utils/logger').createLogger;
   validateRequest = require('./validators').validateRequest;
 
   // Initialize service (reused across warm starts)
