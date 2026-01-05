@@ -65,36 +65,38 @@ class UserRepository extends BaseRepository {
    */
   async createUser(userData) {
     const now = new Date().toISOString();
-    
+
+    // Base user object - don't include null values for GSI keys
+    // DynamoDB GSIs don't accept null for index keys
     const user = {
       userId: userData.userId,
       email: userData.email,
-      name: userData.name || null,
       subscriptionPlan: 'free',
       billingCycle: 'monthly',
-      
+
       // Credits
       creditsBalance: 5,
       creditsUsedToday: 0,
-      lastDailyBonusAt: null,
-      
+
       // Tracking
       projectsCreated: 0,
-      
-      // Billing
-      stripeCustomerId: null,
-      stripeSubscriptionId: null,
+
+      // Billing status
       subscriptionStatus: 'active',
-      currentPeriodEnd: null,
-      
+
       // Admin
       isAdmin: false,
       banned: false,
-      
+
       // Timestamps
       createdAt: now,
       updatedAt: now
     };
+
+    // Only add optional fields if they have values
+    if (userData.name) {
+      user.name = userData.name;
+    }
 
     return await this.put(user);
   }
