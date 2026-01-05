@@ -20,6 +20,7 @@ import {
 } from 'aws-amplify/auth';
 import type { User, AuthState } from '@/types';
 import { env } from '@/lib/config/env';
+import { apiClient } from '@/lib/api/client';
 
 interface AuthContextType extends AuthState {
   login: (email: string, password: string) => Promise<void>;
@@ -174,6 +175,11 @@ export function AuthProvider({ children }: AuthProviderProps): JSX.Element {
       return null;
     }
   }, []);
+
+  // Set up API client with access token getter
+  useEffect(() => {
+    apiClient.setAccessTokenGetter(getAccessToken);
+  }, [getAccessToken]);
 
   const value: AuthContextType = {
     ...state,
