@@ -3,18 +3,37 @@
  * Clean architecture with separation of concerns
  */
 
-const AppGenerationService = require('../shared/services/app-generation.service');
-const { ErrorHandler } = require('../shared/errors');
-const { createLogger } = require('../shared/utils/logger');
-const { validateRequest } = require('./validators');
+let AppGenerationService, ErrorHandler, createLogger, validateRequest, appService;
 
-// Initialize service (reused across warm starts)
-const appService = new AppGenerationService();
+try {
+  AppGenerationService = require('../shared/services/app-generation.service');
+  ErrorHandler = require('../shared/errors').ErrorHandler;
+  createLogger = require('../shared/utils/logger').createLogger;
+  validateRequest = require('./validators').validateRequest;
+
+  // Initialize service (reused across warm starts)
+  appService = new AppGenerationService();
+} catch (initError) {
+  console.error('LAMBDA INIT ERROR:', initError.message, initError.stack);
+  // Export a handler that returns the init error
+  exports.handler = async () => ({
+    statusCode: 500,
+    headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+    body: JSON.stringify({
+      success: false,
+      error: {
+        message: `Lambda initialization failed: ${initError.message}`,
+        stack: initError.stack
+      }
+    })
+  });
+}
 
 /**
  * Main Lambda Handler
  */
-exports.handler = ErrorHandler.wrapHandler(async (event, context) => {
+if (ErrorHandler) {
+  exports.handler = ErrorHandler.wrapHandler(async (event, context) => {
   const logger = createLogger('generate-app', context.requestId);
   const startTime = Date.now();
 
@@ -61,4 +80,5 @@ exports.handler = ErrorHandler.wrapHandler(async (event, context) => {
       data: result
     })
   };
-});
+  });
+}

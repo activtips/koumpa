@@ -179,8 +179,9 @@ class ErrorHandler {
     const statusCode = error.statusCode || 500;
 
     // Determine if we should expose error details
-    const isProduction = process.env.NODE_ENV === 'production';
-    const shouldExposeDetails = error.isOperational || !isProduction;
+    // Always expose in staging for debugging
+    const isProduction = process.env.NODE_ENV === 'production' && !process.env.STAGE?.includes('staging');
+    const shouldExposeDetails = true; // Always expose for now to debug
 
     // Build error response body
     let errorBody;

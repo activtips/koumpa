@@ -70,6 +70,8 @@ class Config {
     const missing = required.filter(key => !process.env[key]);
 
     if (missing.length > 0) {
+      console.error('MISSING ENV VARS:', missing);
+      console.error('AVAILABLE ENV VARS:', Object.keys(process.env).filter(k => !k.includes('SECRET') && !k.includes('KEY')));
       throw new Error(`Missing required environment variables: ${missing.join(', ')}`);
     }
   }
